@@ -14,6 +14,7 @@ export class PostCreateComponent implements OnInit {
   enteredContent = '';
   enteredTitle = '';
   form: FormGroup;
+  imagePreview: string;
   private mode = "create";
   private postId: string;
   public post: Post;
@@ -28,7 +29,8 @@ export class PostCreateComponent implements OnInit {
       {validators: [Validators.required, Validators.minLength(3)]
       }),
     'content': new FormControl(null, 
-      {validators: [Validators.required]})
+      {validators: [Validators.required]}),
+     'image': new FormControl(null, {validators: [Validators.required]}) 
     });
     this.route.paramMap.subscribe((paramMap: ParamMap)=> {
     if(paramMap.has('postId')){
@@ -49,7 +51,19 @@ export class PostCreateComponent implements OnInit {
     }
     });
   }
-
+  
+  // This method is triggered once the image file in the template is changed
+  onImagePicked(event: Event){
+ const file = (event.target as HTMLInputElement).files[0];
+ this.form.patchValue({image: file});
+ this.form.get('image').updateValueAndValidity();
+ const reader = new FileReader();
+ reader.onload = () => {
+  this.imagePreview = reader.result as string;
+ };
+//  Load the file that has been uploaded
+ reader.readAsDataURL(file);
+  }
    onSavePost() {
     if(this.form.invalid){
       return;
