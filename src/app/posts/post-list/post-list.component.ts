@@ -3,11 +3,20 @@ import { Post } from '../post.model';
 import { PostsService } from '../posts.service';
 import { Subscription } from 'rxjs';
 import { PageEvent } from '@angular/material';
+import { trigger, state, transition, style, animate } from '@angular/animations';
 
 @Component({
   selector: 'app-post-list',
   templateUrl: './post-list.component.html',
-  styleUrls: ['./post-list.component.css']
+  styleUrls: ['./post-list.component.css'],
+  animations: [
+    trigger('fade', [
+      transition('void => *', [
+        style({backgroundColor: 'yellow', opacity: 0}),
+        animate(2000, style({ backgroundColor: 'white', opacity: 1}))
+      ])
+    ])
+  ]
 })
 export class PostListComponent implements OnInit, OnDestroy {
 posts: Post[] = [];
