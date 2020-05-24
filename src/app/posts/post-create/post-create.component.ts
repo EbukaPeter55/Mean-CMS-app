@@ -1,9 +1,11 @@
-import { Component, OnInit} from '@angular/core';
+import { Component, OnInit, OnDestroy} from '@angular/core';
 import { NgForm, FormGroup, FormControl, Validators } from '@angular/forms';
 import { PostsService } from '../posts.service';
 import { ActivatedRoute, ParamMap } from '@angular/router';
 import { Post } from "../post.model";
 import { mimeType } from "./mime-type.validator";
+import { Subscription } from 'rxjs';
+import { AuthService } from 'src/app/auth/auth.service';
 
 
 @Component({
@@ -11,7 +13,7 @@ import { mimeType } from "./mime-type.validator";
   templateUrl: './post-create.component.html',
   styleUrls: ['./post-create.component.css']
 })
-export class PostCreateComponent implements OnInit {
+export class PostCreateComponent implements OnInit, OnDestroy {
   enteredContent = '';
   enteredTitle = '';
   form: FormGroup;
@@ -20,11 +22,18 @@ export class PostCreateComponent implements OnInit {
   private postId: string;
   public post: Post;
   isLoading = false;
+  private authStatusSub: Subscription
 
   // The activated route helps to hold the information on the particular route we are currently on  
-  constructor(public postsservice: PostsService, public route: ActivatedRoute) { }
+  constructor(public postsservice: PostsService, public route: ActivatedRoute,
+      private authservice: AuthService) { }
 
   ngOnInit() {
+    this.authStatusSub =  this.authservice.getAuthStatusListener().subscribe(
+      authStatus => {
+        this.isLoading = false;
+      }
+    );
     this.form = new FormGroup({
     'title': new FormControl(null, 
       {validators: [Validators.required, Validators.minLength(3)]
@@ -42,7 +51,13 @@ export class PostCreateComponent implements OnInit {
       this.isLoading = true;
       this.postsservice.getPost(this.postId).subscribe(postData => {
       this.isLoading = false;
-        this.post = {id: postData._id, title: postData.title, content: postData.content, imagePath: postData.imagePath};
+        this.post = {
+          id: postData._id, 
+          title: postData.title,
+          content: postData.content,
+          imagePath: postData.imagePath,
+          creator: postData.creator  
+        };
         this.form.setValue({
           title: this.post.title,
           content: this.post.content,
@@ -84,10 +99,8 @@ export class PostCreateComponent implements OnInit {
   // form.resetForm();  
 }
   
-updatePost(id: string, title: string, content: string){
-const post: Post = {id: id, title: title, content: content, imagePath: null};
-
+ngOnDestroy(){
+  this.authStatusSub.unsubscribe();
 }
- 
 
 }
